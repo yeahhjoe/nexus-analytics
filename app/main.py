@@ -210,3 +210,21 @@ async def metrics_summary():
         "system_metrics": system_metrics,
         "datadog_initialized": datadog_metrics.initialized
     }
+
+
+@app.get("/metrics/transformer")
+async def get_transformer_metrics():
+    """Fetch metrics from the Text-to-Image Transformer service."""
+    import httpx
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get('http://localhost:8000/metrics/summary', timeout=5.0)
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPError as e:
+        logger.error(f"Failed to fetch transformer metrics: {e}")
+        raise HTTPException(status_code=503, detail=f"Could not fetch transformer metrics: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error fetching transformer metrics: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
